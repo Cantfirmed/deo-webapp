@@ -5,6 +5,7 @@ on: [push, workflow_dispatch]
 
 env:
   DOTNET_INSTALL_DIR: /home/actions-runner/dotnet
+  DOTNET_TOOLS_INSTALL_DIR: /home/actions-runner/dotnet-tools
 
 jobs:
   build:
@@ -69,3 +70,52 @@ jobs:
           path: |
             **/bin/
             **/obj/
+
+  analyze:
+    runs-on: self-hosted
+    needs: test 
+    steps:
+      - name: Check 🗿 out 🗿 repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Download 🗿 test 🗿 artifacts
+        uses: actions/download-artifact@v5
+        with:
+          name: test
+      - name: Set up .NET 9
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 9
+          cache: true
+          cache-dependency-path: |
+            Deo.Backend.Tests/packages.lock.json
+            Deo.Frontend.Tests/packages.lock.json
+      - name: Build 🗿 projects
+        run: |
+          dotnet build Deo.Backend
+          dotnet build Deo.Frontend
+      - name: Set up dotnet tools
+        run: |
+          dotnet tool install --tool-path "${DOTNET_TOOLS_INSTALL_DIR}" dotnet-sonarscanner
+          dotnet tool install --tool-path "${DOTNET_TOOLS_INSTALL_DIR}" dotnet-coverage
+      - name: Restore dependencies
+        run: |
+          dotnet restore --locked-mode Deo.Backend.Tests
+          dotnet restore --locked-mode Deo.Frontend.Tests
+      - name: Analyze 🗿 projects
+        run: |
+          ${DOTNET_TOOLS_INSTALL_DIR}/dotnet-sonarscanner begin \
+          /k:"${{ secrets.SONAR_KEY }}" \
+          /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
+          /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}" \
+          /d:sonar.cs.vscoveragexml.reportPaths=*.coverage.xml
+          ${DOTNET_TOOLS_INSTALL_DIR}/dotnet-coverage collect "dotnet test Deo.Backend.Tests" -f xml -o BackendCoverage.coverage.xml
+          ${DOTNET_TOOLS_INSTALL_DIR}/dotnet-coverage collect "dotnet test Deo.Frontend.Tests" -f xml -o FrontendCoverage.coverage.xml
+          ${DOTNET_TOOLS_INSTALL_DIR}/dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+
+      - name: Upload 🗿 artifacts
+        uses: actions/upload-artifact@v5
+        with:
+          name: analyze
+          path: "**/*.coverage.xml"
