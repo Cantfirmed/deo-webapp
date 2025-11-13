@@ -48,8 +48,8 @@ jobs:
           dotnet-version: 9
           cache: true
           cache-dependency-path: |
-            Deo.Backend.Tests/packages-lock.json
-            Deo.Frontend.Tests/packages-lock.json
+            Deo.Backend.Tests/packages.lock.json
+            Deo.Frontend.Tests/packages.lock.json
       - name: Build 🗿 projects
         run: |
           dotnet build Deo.Backend
