@@ -12,8 +12,8 @@ public class CounterPageTests : PageTest
     [OneTimeSetUp]
     public void OneTimeSetUp()
     {
-        // PlaywrightHelpers.InstallDeps();
-        // PlaywrightHelpers.Install();
+        PlaywrightHelpers.InstallDeps();
+        PlaywrightHelpers.Install();
         // frontendUrl = "http://localhost:5580";
         frontendUrl = Environment.GetEnvironmentVariable("DEO_FRONTEND_URL")
             ?? throw new InvalidOperationException($"Environment variable \"{DEO_FRONTEND_URL_ENV_VAR_NAME}\" not set.");
